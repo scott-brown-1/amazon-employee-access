@@ -6,10 +6,15 @@ library(tidyverse)
 library(tidymodels)
 library(embed) # for target encoding
 
-# SHOULD HAVE 112 ANSWERS
+prep_df <- function(df) {
+  if('ACTION' %in% colnames(df)) {
+    df <- df %>% mutate(ACTION = factor(ACTION))
+  }
+  return(df)
+}
 
-setup_train_recipe <- function(train, other_threshold = 0.01, form=ACTION~.){
-  prelim_ft_eng <- recipe(form, data=train) %>%
+setup_train_recipe <- function(df, other_threshold = 0.01, form=ACTION~.){
+  prelim_ft_eng <- recipe(form, data=df) %>%
     step_mutate_at(all_numeric_predictors(), fn = factor) %>% # turn all numeric features into factors
     step_other(all_nominal_predictors(), threshold = other_threshold) %>% # combines categorical values that occur <5% into an "other" value
     step_dummy(all_nominal_predictors()) %>% # dummy variable encoding
@@ -18,7 +23,7 @@ setup_train_recipe <- function(train, other_threshold = 0.01, form=ACTION~.){
   # NOTE: some of these step functions are not appropriate to use together
   
   # Set up preprocessing
-  prepped_recipe <- prep(prelim_ft_eng, new_data=train)
+  prepped_recipe <- prep(prelim_ft_eng, new_data=df)
   
   return(prepped_recipe)
 }
@@ -35,4 +40,3 @@ prepped_recipe <- setup_train_recipe(train)
 
 # Bake recipe
 dim(bake(prepped_recipe, new_data=train))
-
