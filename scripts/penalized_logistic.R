@@ -2,9 +2,13 @@
 ### Imports and setup ###
 #########################
 
+# NOTE: This script is optimized for running as a BATCH job
+
 library(tidyverse)
 library(tidymodels)
-
+library(doParallel)
+	
+setwd('..')
 source('./scripts/amazon_analysis.R')
 
 #########################
@@ -22,7 +26,10 @@ test <- prep_df(vroom::vroom('./data/test.csv'))
 set.seed(42)
 
 ## parallel tune grid
-doParallel::registerDoParallel(10)
+
+#doParallel::registerDoParallel(10)
+cl <- makePSOCKcluster(15)
+registerDoParallel(cl)
 
 ## Set up preprocessing
 prepped_recipe <- setup_train_recipe(train)
@@ -79,3 +86,5 @@ output <- data.frame(
 
 #LS: penalty, then mixture
 vroom::vroom_write(output,'./outputs/penalized_logistic_predictions.csv',delim=',')
+
+stopCluster(cl)

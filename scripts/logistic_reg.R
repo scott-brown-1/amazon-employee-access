@@ -4,7 +4,9 @@
 
 library(tidyverse)
 library(tidymodels)
+library(doParallel)
 
+setwd('..')
 source('./scripts/amazon_analysis.R')
 
 #########################
@@ -22,7 +24,8 @@ test <- prep_df(vroom::vroom('./data/test.csv'))
 set.seed(42)
 
 ## parallel tune grid
-doParallel::registerDoParallel(10)
+cl <- makePSOCKcluster(15)
+registerDoParallel(cl)
 
 ## Set up preprocessing
 prepped_recipe <- setup_train_recipe(train)
@@ -52,7 +55,7 @@ final_wf <- logistic_wf %>%
 ## Predict new rentals
 CUTOFF <- 0.8
 y_pred <- predict(final_wf, new_data=test, type='prob')
-y_pred_class <- y_pred$.pred_1 > CUTOFF
+#y_pred_class <- y_pred$.pred_1 > CUTOFF
 
 # Create output df in Kaggle format
 output <- data.frame(
@@ -61,3 +64,5 @@ output <- data.frame(
 )
 
 vroom::vroom_write(output,'./outputs/logistic_predictions.csv',delim=',')
+
+stopCluster(cl)
