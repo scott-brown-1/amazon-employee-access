@@ -90,6 +90,6 @@ output <- data.frame(
 )
 
 #LS: penalty, then mixture
-vroom::vroom_write(output,'./outputs/random_forest_predictions.csv',delim=',')
+vroom::vroom_write(output,'./outputs/rf_batch_predictions.csv',delim=',')
 
 stopCluster(cl)
