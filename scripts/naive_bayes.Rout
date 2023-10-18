@@ -1,0 +1,212 @@
+
+R version 4.3.1 (2023-06-16) -- "Beagle Scouts"
+Copyright (C) 2023 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #########################
+> ### Imports and setup ###
+> #########################
+> 
+> # NOTE: This script is optimized for running as a BATCH job
+> 
+> library(tidyverse)
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.3     ✔ readr     2.1.4
+✔ forcats   1.0.0     ✔ stringr   1.5.0
+✔ ggplot2   3.4.3     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.0
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+> library(tidymodels)
+── Attaching packages ────────────────────────────────────── tidymodels 1.1.1 ──
+✔ broom        1.0.5     ✔ rsample      1.2.0
+✔ dials        1.2.0     ✔ tune         1.1.2
+✔ infer        1.0.5     ✔ workflows    1.1.3
+✔ modeldata    1.2.0     ✔ workflowsets 1.0.1
+✔ parsnip      1.1.1     ✔ yardstick    1.2.0
+✔ recipes      1.0.8     
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ scales::discard() masks purrr::discard()
+✖ dplyr::filter()   masks stats::filter()
+✖ recipes::fixed()  masks stringr::fixed()
+✖ dplyr::lag()      masks stats::lag()
+✖ yardstick::spec() masks readr::spec()
+✖ recipes::step()   masks stats::step()
+• Dig deeper into tidy modeling with R at https://www.tmwr.org
+> library(discrim)
+
+Attaching package: ‘discrim’
+
+The following object is masked from ‘package:dials’:
+
+    smoothness
+
+> library(doParallel)
+Loading required package: foreach
+
+Attaching package: ‘foreach’
+
+The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+Loading required package: iterators
+Loading required package: parallel
+> 
+> setwd('..')
+> source('./scripts/amazon_analysis.R')
+> 
+> #########################
+> ####### Load Data #######
+> #########################
+> 
+> ## Load data
+> train <- prep_df(vroom::vroom('./data/train.csv'))
+Rows: 32769 Columns: 10
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl (10): ACTION, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTN...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+> test <- prep_df(vroom::vroom('./data/test.csv'))
+Rows: 58921 Columns: 10
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+> 
+> #########################
+> ## Feature Engineering ##
+> #########################
+> 
+> set.seed(42)
+> 
+> ## parallel tune grid
+> 
+> cl <- makePSOCKcluster(15)
+> registerDoParallel(cl)
+> 
+> ## Set up preprocessing
+> prepped_recipe <- setup_train_recipe(train)
+> 
+> ## Bake recipe
+> bake(prepped_recipe, new_data=train)
+# A tibble: 32,769 × 1,050
+   ACTION RESOURCE_X917 RESOURCE_X971 RESOURCE_X972 RESOURCE_X1020
+   <fct>          <dbl>         <dbl>         <dbl>          <dbl>
+ 1 1                  0             0             0              0
+ 2 1                  0             0             0              0
+ 3 1                  0             0             0              0
+ 4 1                  0             0             0              0
+ 5 1                  0             0             0              0
+ 6 0                  0             0             0              0
+ 7 1                  0             0             0              0
+ 8 1                  0             0             0              0
+ 9 1                  0             0             0              0
+10 1                  0             0             0              0
+# ℹ 32,759 more rows
+# ℹ 1,045 more variables: RESOURCE_X1937 <dbl>, RESOURCE_X1969 <dbl>,
+#   RESOURCE_X3130 <dbl>, RESOURCE_X3264 <dbl>, RESOURCE_X3853 <dbl>,
+#   RESOURCE_X4675 <dbl>, RESOURCE_X5112 <dbl>, RESOURCE_X5173 <dbl>,
+#   RESOURCE_X6977 <dbl>, RESOURCE_X7543 <dbl>, RESOURCE_X7678 <dbl>,
+#   RESOURCE_X13878 <dbl>, RESOURCE_X14354 <dbl>, RESOURCE_X14570 <dbl>,
+#   RESOURCE_X15022 <dbl>, RESOURCE_X15064 <dbl>, RESOURCE_X15369 <dbl>, …
+> bake(prepped_recipe, new_data=test)
+# A tibble: 58,921 × 1,049
+   RESOURCE_X917 RESOURCE_X971 RESOURCE_X972 RESOURCE_X1020 RESOURCE_X1937
+           <dbl>         <dbl>         <dbl>          <dbl>          <dbl>
+ 1             0             0             0              0              0
+ 2             0             0             0              0              0
+ 3             0             0             0              0              0
+ 4             0             0             0              0              0
+ 5             0             0             0              0              0
+ 6             0             0             0              0              0
+ 7             0             0             0              0              0
+ 8             0             0             0              0              0
+ 9             0             0             0              0              0
+10             0             0             0              0              0
+# ℹ 58,911 more rows
+# ℹ 1,044 more variables: RESOURCE_X1969 <dbl>, RESOURCE_X3130 <dbl>,
+#   RESOURCE_X3264 <dbl>, RESOURCE_X3853 <dbl>, RESOURCE_X4675 <dbl>,
+#   RESOURCE_X5112 <dbl>, RESOURCE_X5173 <dbl>, RESOURCE_X6977 <dbl>,
+#   RESOURCE_X7543 <dbl>, RESOURCE_X7678 <dbl>, RESOURCE_X13878 <dbl>,
+#   RESOURCE_X14354 <dbl>, RESOURCE_X14570 <dbl>, RESOURCE_X15022 <dbl>,
+#   RESOURCE_X15064 <dbl>, RESOURCE_X15369 <dbl>, RESOURCE_X15714 <dbl>, …
+> 
+> #########################
+> ## Fit Regression Model #
+> #########################
+> 
+> ## Define model
+> bayes_model <- parsnip::naive_Bayes(
++   Laplace=tune(), 
++   smoothness=tune()) %>%
++ set_engine("naivebayes") %>%
++ set_mode("classification")
+> 
+> ## Define workflow
+> # Transform response to get different cutoff
+> bayes_wf <- workflow(prepped_recipe) %>%
++   add_model(bayes_model)
+> 
+> ## Grid of values to tune over
+> tuning_grid <- grid_regular(
++   Laplace(),
++   smoothness(),
++   levels = 10)
+> 
+> ## Split data for CV
+> folds <- vfold_cv(train, v = 10, repeats=1)
+> 
+> ## Run the CV
+> cv_results <- bayes_wf %>%
++   tune_grid(resamples=folds,
++             grid=tuning_grid,
++             metrics=metric_set(roc_auc))
+> 
+> ## Find optimal tuning params
+> best_params <- cv_results %>%
++   select_best("roc_auc")
+> 
+> ## Fit workflow
+> final_wf <- bayes_wf %>%
++   finalize_workflow(best_params) %>%
++   fit(data = train)
+> 
+> ## Predict new rentals
+> y_pred <- predict(final_wf, new_data=test, type='prob')
+> 
+> # Create output df in Kaggle format
+> output <- data.frame(
++   Id=test$id,
++   Action=y_pred$.pred_1
++ )
+> 
+> #LS: penalty, then mixture
+> vroom::vroom_write(output,'./outputs/naive_bayes_predictions.csv',delim=',')
+> 
+> stopCluster(cl)
+> 
+> proc.time()
+   user  system elapsed 
+ 79.238   8.055 599.256 
