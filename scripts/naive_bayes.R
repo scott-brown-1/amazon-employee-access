@@ -41,45 +41,61 @@ bake(prepped_recipe, new_data=test)
 #########################
 ## Fit Regression Model #
 #########################
-
+library(klaR)
 ## Define model
-bayes_model <- parsnip::naive_Bayes(
-  Laplace=tune(), 
-  smoothness=tune()) %>%
-set_engine("naivebayes") %>%
-set_mode("classification")
+bayes_model <- naive_Bayes(
+  Laplace=0.25, 
+  smoothness=0.5) %>%
+  set_engine('klaR') %>%
+  #set_engine("naivebayes") %>%
+  set_mode("classification")
 
 ## Define workflow
 # Transform response to get different cutoff
-bayes_wf <- workflow(prepped_recipe) %>%
-  add_model(bayes_model)
+final_wf <- workflow(prepped_recipe) %>%
+  add_model(bayes_model) %>%
+  fit(data=train)
 
-## Grid of values to tune over
-tuning_grid <- grid_regular(
-  Laplace(),
-  smoothness(),
-  levels = 10)
-
-## Split data for CV
-folds <- vfold_cv(train, v = 10, repeats=1)
-
-## Run the CV
-cv_results <- bayes_wf %>%
-  tune_grid(resamples=folds,
-            grid=tuning_grid,
-            metrics=metric_set(roc_auc))
-
-## Find optimal tuning params
-best_params <- cv_results %>%
-  select_best("roc_auc")
-
-## Fit workflow
-final_wf <- bayes_wf %>%
-  finalize_workflow(best_params) %>%
-  fit(data = train)
-
-## Predict new rentals
 y_pred <- predict(final_wf, new_data=test, type='prob')
+
+## Define model
+# bayes_model <- naive_Bayes(
+#   Laplace=tune(), 
+#   smoothness=tune()) %>%
+# set_engine("naivebayes") %>%
+# set_mode("classification")
+# 
+# ## Define workflow
+# # Transform response to get different cutoff
+# bayes_wf <- workflow(prepped_recipe) %>%
+#   add_model(bayes_model)
+# 
+# ## Grid of values to tune over
+# tuning_grid <- grid_regular(
+#   Laplace(),
+#   smoothness(),
+#   levels = 1)#10)
+# 
+# ## Split data for CV
+# folds <- vfold_cv(train, v = 2, repeats=1)
+# 
+# ## Run the CV
+# cv_results <- bayes_wf %>%
+#   tune_grid(resamples=folds,
+#             grid=tuning_grid,
+#             metrics=metric_set(roc_auc))
+# 
+# ## Find optimal tuning params
+# best_params <- cv_results %>%
+#   select_best("roc_auc")
+# 
+# ## Fit workflow
+# final_wf <- bayes_wf %>%
+#   finalize_workflow(best_params) %>%
+#   fit(data = train)
+# 
+# ## Predict new rentals
+# y_pred <- predict(final_wf, new_data=test, type='prob')
 
 # Create output df in Kaggle format
 output <- data.frame(
