@@ -49,7 +49,7 @@ Type 'q()' to quit R.
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Dig deeper into tidy modeling with R at https://www.tmwr.org
+• Learn how to get started at https://www.tidymodels.org/start/
 > library(discrim)
 
 Attaching package: ‘discrim’
@@ -96,87 +96,82 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 > 
 > #########################
-> ## Feature Engineering ##
+> ## Feature Engineering ## 
 > #########################
 > 
 > set.seed(42)
 > 
 > ## parallel tune grid
 > 
-> cl <- makePSOCKcluster(15)
+> cl <- makePSOCKcluster(50)
 > registerDoParallel(cl)
 > 
 > ## Set up preprocessing
 > prepped_recipe <- setup_train_recipe(train)
+boundary (singular) fit: see help('isSingular')
+Warning message:
+Column(s) have zero variance so scaling cannot be used: `MGR_ID`. Consider using `step_zv()` to remove those columns before normalizing 
 > 
 > ## Bake recipe
 > bake(prepped_recipe, new_data=train)
-# A tibble: 32,769 × 1,050
-   ACTION RESOURCE_X917 RESOURCE_X971 RESOURCE_X972 RESOURCE_X1020
-   <fct>          <dbl>         <dbl>         <dbl>          <dbl>
- 1 1                  0             0             0              0
- 2 1                  0             0             0              0
- 3 1                  0             0             0              0
- 4 1                  0             0             0              0
- 5 1                  0             0             0              0
- 6 0                  0             0             0              0
- 7 1                  0             0             0              0
- 8 1                  0             0             0              0
- 9 1                  0             0             0              0
-10 1                  0             0             0              0
+# A tibble: 32,769 × 10
+   RESOURCE   MGR_ID ROLE_ROLLUP_1 ROLE_ROLLUP_2 ROLE_DEPTNAME ROLE_TITLE
+      <dbl>    <dbl>         <dbl>         <dbl>         <dbl>      <dbl>
+ 1    0.252 4.44e-16        -0.473        -0.543         0.169     -1.28 
+ 2    0.252 4.44e-16        -0.473        -1.41          0.169     -0.145
+ 3    0.252 4.44e-16         1.39          0.896         0.940      1.86 
+ 4    0.252 4.44e-16        -0.473        -1.41          0.169      1.00 
+ 5    0.252 4.44e-16         1.39          0.896         0.169     -0.145
+ 6    0.252 4.44e-16         1.39          0.896         0.169      0.817
+ 7   -0.487 4.44e-16        -0.473        -1.41          0.169     -0.145
+ 8    0.252 4.44e-16        -0.473         0.656         0.169     -0.145
+ 9    0.252 4.44e-16        -0.473        -1.01          0.169     -0.145
+10    0.252 4.44e-16         1.39          0.896         0.345      1.86 
 # ℹ 32,759 more rows
-# ℹ 1,045 more variables: RESOURCE_X1937 <dbl>, RESOURCE_X1969 <dbl>,
-#   RESOURCE_X3130 <dbl>, RESOURCE_X3264 <dbl>, RESOURCE_X3853 <dbl>,
-#   RESOURCE_X4675 <dbl>, RESOURCE_X5112 <dbl>, RESOURCE_X5173 <dbl>,
-#   RESOURCE_X6977 <dbl>, RESOURCE_X7543 <dbl>, RESOURCE_X7678 <dbl>,
-#   RESOURCE_X13878 <dbl>, RESOURCE_X14354 <dbl>, RESOURCE_X14570 <dbl>,
-#   RESOURCE_X15022 <dbl>, RESOURCE_X15064 <dbl>, RESOURCE_X15369 <dbl>, …
+# ℹ 4 more variables: ROLE_FAMILY_DESC <dbl>, ROLE_FAMILY <dbl>,
+#   ROLE_CODE <dbl>, ACTION <fct>
 > bake(prepped_recipe, new_data=test)
-# A tibble: 58,921 × 1,049
-   RESOURCE_X917 RESOURCE_X971 RESOURCE_X972 RESOURCE_X1020 RESOURCE_X1937
-           <dbl>         <dbl>         <dbl>          <dbl>          <dbl>
- 1             0             0             0              0              0
- 2             0             0             0              0              0
- 3             0             0             0              0              0
- 4             0             0             0              0              0
- 5             0             0             0              0              0
- 6             0             0             0              0              0
- 7             0             0             0              0              0
- 8             0             0             0              0              0
- 9             0             0             0              0              0
-10             0             0             0              0              0
+# A tibble: 58,921 × 9
+   RESOURCE   MGR_ID ROLE_ROLLUP_1 ROLE_ROLLUP_2 ROLE_DEPTNAME ROLE_TITLE
+      <dbl>    <dbl>         <dbl>         <dbl>         <dbl>      <dbl>
+ 1    0.252 4.44e-16         1.39          0.896         0.345      1.86 
+ 2    0.252 4.44e-16        -0.473        -0.447         0.169     -0.145
+ 3    0.252 4.44e-16        -0.473        -0.543         0.169     -0.145
+ 4    0.252 4.44e-16        -0.473        -0.596        -2.64      -0.145
+ 5    0.252 4.44e-16        -0.473        -1.41         -2.49      -3.03 
+ 6    0.252 4.44e-16        -0.473        -0.215         0.169     -0.145
+ 7    0.252 4.44e-16        -0.473        -1.41          0.169     -1.38 
+ 8   -5.11  4.44e-16        -0.473        -0.543         0.169     -0.145
+ 9    0.252 4.44e-16        -1.52          0.896         0.169      1.13 
+10    0.252 4.44e-16        -0.473        -1.21          0.169      1.00 
 # ℹ 58,911 more rows
-# ℹ 1,044 more variables: RESOURCE_X1969 <dbl>, RESOURCE_X3130 <dbl>,
-#   RESOURCE_X3264 <dbl>, RESOURCE_X3853 <dbl>, RESOURCE_X4675 <dbl>,
-#   RESOURCE_X5112 <dbl>, RESOURCE_X5173 <dbl>, RESOURCE_X6977 <dbl>,
-#   RESOURCE_X7543 <dbl>, RESOURCE_X7678 <dbl>, RESOURCE_X13878 <dbl>,
-#   RESOURCE_X14354 <dbl>, RESOURCE_X14570 <dbl>, RESOURCE_X15022 <dbl>,
-#   RESOURCE_X15064 <dbl>, RESOURCE_X15369 <dbl>, RESOURCE_X15714 <dbl>, …
+# ℹ 3 more variables: ROLE_FAMILY_DESC <dbl>, ROLE_FAMILY <dbl>,
+#   ROLE_CODE <dbl>
 > 
 > #########################
 > ## Fit Regression Model #
 > #########################
 > 
 > ## Define model
-> bayes_model <- parsnip::naive_Bayes(
-+   Laplace=tune(), 
+> bayes_model <- naive_Bayes(
++   Laplace=tune(),
 +   smoothness=tune()) %>%
 + set_engine("naivebayes") %>%
 + set_mode("classification")
 > 
 > ## Define workflow
-> # Transform response to get different cutoff
-> bayes_wf <- workflow(prepped_recipe) %>%
+> bayes_wf <- workflow() %>%
++   add_recipe(prepped_recipe) %>%
 +   add_model(bayes_model)
 > 
 > ## Grid of values to tune over
 > tuning_grid <- grid_regular(
 +   Laplace(),
 +   smoothness(),
-+   levels = 10)
++   levels = 5)
 > 
 > ## Split data for CV
-> folds <- vfold_cv(train, v = 10, repeats=1)
+> folds <- vfold_cv(train, v = 5, repeats=1)
 > 
 > ## Run the CV
 > cv_results <- bayes_wf %>%
@@ -192,15 +187,29 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > final_wf <- bayes_wf %>%
 +   finalize_workflow(best_params) %>%
 +   fit(data = train)
+boundary (singular) fit: see help('isSingular')
+Warning message:
+Column(s) have zero variance so scaling cannot be used: `MGR_ID`. Consider using `step_zv()` to remove those columns before normalizing 
 > 
-> ## Predict new rentals
-> y_pred <- predict(final_wf, new_data=test, type='prob')
+> ## Predict new y
+> output <- predict(final_wf, new_data=test, type='prob') %>%
++   bind_cols(., test) %>%
++   rename(ACTION=.pred_1) %>%
++   select(id, ACTION)
 > 
-> # Create output df in Kaggle format
-> output <- data.frame(
-+   Id=test$id,
-+   Action=y_pred$.pred_1
-+ )
+> print(sum(output$ACTION))
+[1] 58702.41
+> print(nrow(output))
+[1] 58921
+> 
+> ## Predict new y
+> # y_pred <- predict(final_wf, new_data=test, type='prob')
+> # 
+> # # Create output df in Kaggle format
+> # output <- data.frame(
+> #   Id=test$id,
+> #   Action=y_pred$.pred_1
+> # )
 > 
 > #LS: penalty, then mixture
 > vroom::vroom_write(output,'./outputs/naive_bayes_predictions.csv',delim=',')
@@ -209,4 +218,4 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > 
 > proc.time()
    user  system elapsed 
- 79.238   8.055 599.256 
+ 77.852   1.913 196.984 

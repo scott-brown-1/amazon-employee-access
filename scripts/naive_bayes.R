@@ -28,7 +28,7 @@ set.seed(42)
 
 ## parallel tune grid
 
-cl <- makePSOCKcluster(15)
+cl <- makePSOCKcluster(10)
 registerDoParallel(cl)
 
 ## Set up preprocessing

@@ -23,8 +23,8 @@ setup_train_recipe <- function(df, other_threshold = 0.01, form=ACTION~., force_
   prelim_ft_eng <- recipe(form, data=df) %>%
     step_mutate_at(all_numeric_predictors(), fn=factor) %>%
     step_other(all_nominal_predictors(), threshold = other_threshold) %>%
-    step_lencode_bayes(all_nominal_predictors(), outcome = vars(ACTION)) %>%
-    #step_lencode_mixed(all_nominal_predictors(), outcome=vars(ACTION)) %>%
+    #step_lencode_bayes(all_nominal_predictors(), outcome = vars(ACTION)) %>%
+    step_lencode_mixed(all_nominal_predictors(), outcome=vars(ACTION)) %>%
     step_normalize(all_numeric_predictors())
     #step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION)) #target encoding
   # also step_lencode_glm()
