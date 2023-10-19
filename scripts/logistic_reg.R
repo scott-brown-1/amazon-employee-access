@@ -18,14 +18,15 @@ train <- prep_df(vroom::vroom('./data/train.csv'))
 test <- prep_df(vroom::vroom('./data/test.csv'))
 
 #########################
-## Feature Engineering ##
+## Feature Engineering ##data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAWElEQVR42mNgGPTAxsZmJsVqQApgmGw1yApwKcQiT7phRBuCzzCSDSHGMKINIeDNmWQlA2IigKJwIssQkHdINgxfmBBtGDEBS3KCxBc7pMQgMYE5c/AXPwAwSX4lV3pTWwAAAABJRU5ErkJggg==
 #########################
 
 set.seed(42)
 
 ## parallel tune grid
-cl <- makePSOCKcluster(15)
-registerDoParallel(cl)
+#cl <- makePSOCKcluster(15)
+#registerDoParallel(cl)
+doParallel::registerDoParallel(10)
 
 ## Set up preprocessing
 prepped_recipe <- setup_train_recipe(train)
@@ -53,9 +54,7 @@ final_wf <- logistic_wf %>%
   fit(data = train)
 
 ## Predict new rentals
-CUTOFF <- 0.8
 y_pred <- predict(final_wf, new_data=test, type='prob')
-#y_pred_class <- y_pred$.pred_1 > CUTOFF
 
 # Create output df in Kaggle format
 output <- data.frame(
@@ -65,4 +64,4 @@ output <- data.frame(
 
 vroom::vroom_write(output,'./outputs/logistic_predictions.csv',delim=',')
 
-stopCluster(cl)
+#stopCluster(cl)
