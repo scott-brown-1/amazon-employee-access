@@ -1,0 +1,189 @@
+
+R version 4.3.1 (2023-06-16) -- "Beagle Scouts"
+Copyright (C) 2023 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #########################
+> ### Imports and setup ###
+> #########################
+> 
+> # NOTE: This script is optimized for running as a BATCH job
+> 
+> library(tidyverse)
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.3     ✔ readr     2.1.4
+✔ forcats   1.0.0     ✔ stringr   1.5.0
+✔ ggplot2   3.4.3     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.0
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+> library(tidymodels)
+── Attaching packages ────────────────────────────────────── tidymodels 1.1.1 ──
+✔ broom        1.0.5     ✔ rsample      1.2.0
+✔ dials        1.2.0     ✔ tune         1.1.2
+✔ infer        1.0.5     ✔ workflows    1.1.3
+✔ modeldata    1.2.0     ✔ workflowsets 1.0.1
+✔ parsnip      1.1.1     ✔ yardstick    1.2.0
+✔ recipes      1.0.8     
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ scales::discard() masks purrr::discard()
+✖ dplyr::filter()   masks stats::filter()
+✖ recipes::fixed()  masks stringr::fixed()
+✖ dplyr::lag()      masks stats::lag()
+✖ yardstick::spec() masks readr::spec()
+✖ recipes::step()   masks stats::step()
+• Learn how to get started at https://www.tidymodels.org/start/
+> library(doParallel)
+Loading required package: foreach
+
+Attaching package: ‘foreach’
+
+The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+Loading required package: iterators
+Loading required package: parallel
+> 
+> setwd('..')
+> source('./scripts/amazon_analysis.R')
+> 
+> #########################
+> ####### Load Data #######
+> #########################
+> 
+> ## Load data
+> train <- prep_df(vroom::vroom('./data/train.csv'))
+Rows: 32769 Columns: 10
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl (10): ACTION, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTN...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+> test <- prep_df(vroom::vroom('./data/test.csv'))
+Rows: 58921 Columns: 10
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+> 
+> #########################
+> ## Feature Engineering ## 
+> #########################
+> 
+> set.seed(42)
+> 
+> ## parallel tune grid
+> 
+> cl <- makePSOCKcluster(15)
+> registerDoParallel(cl)
+> 
+> ## Set up preprocessing
+> prepped_recipe <- setup_train_recipe(train)
+> 
+> ## Bake recipe
+> bake(prepped_recipe, new_data=train)
+# A tibble: 32,769 × 10
+   RESOURCE MGR_ID ROLE_ROLLUP_1 ROLE_ROLLUP_2 ROLE_DEPTNAME ROLE_TITLE
+      <dbl>  <dbl>         <dbl>         <dbl>         <dbl>      <dbl>
+ 1  -0.351  -0.954        -0.141        -0.278      -0.00436     -0.469
+ 2  -0.0555 -0.588        -0.141        -0.955       1.12        -0.334
+ 3  -0.290  -0.465         1.02          0.879       0.746        1.24 
+ 4  -0.223  -0.988        -0.141        -0.955      -1.25         0.773
+ 5  -0.594  -0.573         0.614         1.67        2.11         1.36 
+ 6   1.29    2.02          0.419         0.474       1.18         0.675
+ 7   0.389  -0.709        -0.141        -0.955      -0.923        0.605
+ 8  -0.891  -0.524        -0.141         0.707      -0.118        0.456
+ 9  -0.407  -0.797        -0.141        -0.673       0.101        0.881
+10  -0.773  -0.418         3.47          2.69        0.503        1.24 
+# ℹ 32,759 more rows
+# ℹ 4 more variables: ROLE_FAMILY_DESC <dbl>, ROLE_FAMILY <dbl>,
+#   ROLE_CODE <dbl>, ACTION <fct>
+> bake(prepped_recipe, new_data=test)
+# A tibble: 58,921 × 9
+   RESOURCE MGR_ID ROLE_ROLLUP_1 ROLE_ROLLUP_2 ROLE_DEPTNAME ROLE_TITLE
+      <dbl>  <dbl>         <dbl>         <dbl>         <dbl>      <dbl>
+ 1   -0.773  1.49          3.47         2.69          0.503       1.24 
+ 2    1.81  -0.677        -0.141       -0.207         0.358      -1.65 
+ 3   -0.671 -0.938        -0.141       -0.278        -1.10        0.273
+ 4   -0.290  1.46         -0.141       -0.324        -0.754       0.850
+ 5    0.668 -0.698        -0.141       -0.955        -0.684      -2.01 
+ 6    1.27  -0.944        -0.141       -0.0278       -1.04       -1.81 
+ 7   -0.801  1.85         -0.141       -0.955         2.17       -0.582
+ 8   -2.42  -0.765        -0.141       -0.278        -0.0823     -1.76 
+ 9    2.41  -0.486        -0.897        0.295         1.71        0.858
+10    1.41  -0.747        -0.141       -0.862        -1.32        0.773
+# ℹ 58,911 more rows
+# ℹ 3 more variables: ROLE_FAMILY_DESC <dbl>, ROLE_FAMILY <dbl>,
+#   ROLE_CODE <dbl>
+> 
+> #########################
+> ## Fit Classifer Model ##
+> #########################
+> 
+> ## Define KNN model
+> knn_model <- nearest_neighbor(neighbors=tune()) %>%
++   set_mode("classification") %>%
++   set_engine("kknn")
+> 
+> knn_wf <- workflow() %>%
++   add_recipe(prepped_recipe) %>%
++   add_model(knn_model)
+> 
+> ## Grid of values to tune over
+> tuning_grid <- grid_regular(
++   neighbors(),
++   levels = 5)
+> 
+> ## Split data for CV
+> folds <- vfold_cv(train, v = 5, repeats=1)
+> 
+> ## Run the CV
+> cv_results <- knn_wf %>%
++   tune_grid(resamples=folds,
++             grid=tuning_grid,
++             metrics=metric_set(roc_auc))
+> 
+> ## Find optimal tuning params
+> best_params <- cv_results %>%
++   select_best("roc_auc")
+> 
+> ## Fit workflow
+> final_wf <- knn_wf %>%
++   finalize_workflow(best_params) %>%
++   fit(data = train)
+> 
+> ## Fit or Tune Model HERE
+> ## Predict new y
+> output <- predict(final_wf, new_data=test, type='prob') %>%
++   bind_cols(., test) %>%
++   rename(ACTION=.pred_1) %>%
++   select(id, ACTION)
+> 
+> vroom::vroom_write(output,'./outputs/knn_predictions.csv',delim=',')
+> 
+> stopCluster(cl)
+> 
+> proc.time()
+   user  system elapsed 
+186.789   1.288 234.738 

@@ -27,7 +27,7 @@ set.seed(42)
 
 ## parallel tune grid
 
-cl <- makePSOCKcluster(10)
+cl <- makePSOCKcluster(15)
 registerDoParallel(cl)
 
 ## Set up preprocessing
@@ -53,10 +53,10 @@ knn_wf <- workflow() %>%
 ## Grid of values to tune over
 tuning_grid <- grid_regular(
   neighbors(),
-  levels = 2)
+  levels = 5)
 
 ## Split data for CV
-folds <- vfold_cv(train, v = 2, repeats=1)
+folds <- vfold_cv(train, v = 5, repeats=1)
 
 ## Run the CV
 cv_results <- knn_wf %>%
@@ -69,7 +69,7 @@ best_params <- cv_results %>%
   select_best("roc_auc")
 
 ## Fit workflow
-final_wf <- resamples %>%
+final_wf <- knn_wf %>%
   finalize_workflow(best_params) %>%
   fit(data = train)
 
