@@ -32,7 +32,7 @@ cl <- makePSOCKcluster(10)
 registerDoParallel(cl)
 
 ## Set up preprocessing
-prepped_recipe <- setup_train_recipe(train)
+prepped_recipe <- setup_train_recipe(train, use_pca=T, pca_threshold=0.85)
 
 ## Bake recipe
 bake(prepped_recipe, new_data=train)
