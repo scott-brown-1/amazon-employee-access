@@ -80,6 +80,7 @@ final_wf <- bayes_wf %>%
 
 ## Predict new y
 output <- predict(final_wf, new_data=test, type='prob') %>%
+  bind_cols(., test) %>%
   rename(ACTION=.pred_1) %>%
   select(id, ACTION)
 

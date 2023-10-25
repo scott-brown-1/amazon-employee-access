@@ -27,7 +27,7 @@ set.seed(42)
 
 ## parallel tune grid
 
-cl <- makePSOCKcluster(10)
+cl <- makePSOCKcluster(20)
 registerDoParallel(cl)
 
 ## Set up preprocessing
@@ -72,6 +72,8 @@ cv_results <- svm_wf %>%
 best_params <- cv_results %>%
   select_best("roc_auc")
 
+print(best_params)
+
 ## Fit workflow
 final_wf <- svm_wf %>%
   finalize_workflow(best_params) %>%
@@ -79,6 +81,7 @@ final_wf <- svm_wf %>%
 
 ## Predict new y
 output <- predict(final_wf, new_data=test, type='prob') %>%
+  bind_cols(., test) %>%
   rename(ACTION=.pred_1) %>%
   select(id, ACTION)
 
