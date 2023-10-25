@@ -6,7 +6,6 @@
 
 library(tidyverse)
 library(tidymodels)
-library(discrim)
 library(doParallel)
 
 setwd('..')
@@ -43,28 +42,28 @@ bake(prepped_recipe, new_data=test)
 #########################
 
 ## Define model
-bayes_model <- naive_Bayes(
-  Laplace=tune(),
-  smoothness=tune()) %>%
-set_engine("naivebayes") %>%
-set_mode("classification")
+svm_model <- svm_rbf(rbf_sigma=tune(), cost=tune()) %>% # Radial
+             #svm_poly(degree=tune(), cost=tune()) %>% # Polynomial
+             #svm_linear(cost=tune()) %>% # Linear
+  set_mode("classification") %>%
+  set_engine("kernlab")
 
 ## Define workflow
-bayes_wf <- workflow() %>%
+svm_wf <- workflow() %>%
   add_recipe(prepped_recipe) %>%
-  add_model(bayes_model)
+  add_model(svm_model)
 
 ## Grid of values to tune over
 tuning_grid <- grid_regular(
-  Laplace(),
-  smoothness(),
-  levels = 5)
+  rbf_sigma(),
+  cost(),
+  levels = 2)
 
 ## Split data for CV
-folds <- vfold_cv(train, v = 5, repeats=1)
+folds <- vfold_cv(train, v = 2, repeats=1)
 
 ## Run the CV
-cv_results <- bayes_wf %>%
+cv_results <- svm_wf %>%
   tune_grid(resamples=folds,
             grid=tuning_grid,
             metrics=metric_set(roc_auc))
@@ -74,7 +73,7 @@ best_params <- cv_results %>%
   select_best("roc_auc")
 
 ## Fit workflow
-final_wf <- bayes_wf %>%
+final_wf <- svm_wf %>%
   finalize_workflow(best_params) %>%
   fit(data = train)
 
@@ -83,19 +82,6 @@ output <- predict(final_wf, new_data=test, type='prob') %>%
   rename(ACTION=.pred_1) %>%
   select(id, ACTION)
 
-print(sum(output$ACTION))
-print(nrow(output))
-
-## Predict new y
-# y_pred <- predict(final_wf, new_data=test, type='prob')
-# 
-# # Create output df in Kaggle format
-# output <- data.frame(
-#   Id=test$id,
-#   Action=y_pred$.pred_1
-# )
-
-#LS: penalty, then mixture
-vroom::vroom_write(output,'./outputs/naive_bayes_predictions.csv',delim=',')
+vroom::vroom_write(output,'./outputs/svm_predictions.csv',delim=',')
 
 stopCluster(cl)
