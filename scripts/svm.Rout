@@ -95,7 +95,7 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > 
 > ## parallel tune grid
 > 
-> cl <- makePSOCKcluster(20)
+> cl <- makePSOCKcluster(15)
 > registerDoParallel(cl)
 > 
 > ## Set up preprocessing
@@ -153,10 +153,10 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > tuning_grid <- grid_regular(
 +   rbf_sigma(),
 +   cost(),
-+   levels = 2)
++   levels = 5)
 > 
 > ## Split data for CV
-> folds <- vfold_cv(train, v = 2, repeats=1)
+> folds <- vfold_cv(train, v = 5, repeats=1)
 > 
 > ## Run the CV
 > cv_results <- svm_wf %>%
@@ -170,15 +170,15 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > 
 > print(best_params)
 # A tibble: 1 × 3
-      cost    rbf_sigma .config             
-     <dbl>        <dbl> <chr>               
-1 0.000977 0.0000000001 Preprocessor1_Model1
+   cost    rbf_sigma .config              
+  <dbl>        <dbl> <chr>                
+1    32 0.0000000001 Preprocessor1_Model21
 > 
 > ## Fit workflow
 > final_wf <- svm_wf %>%
 +   finalize_workflow(best_params) %>%
 +   fit(data = train)
-> 
+maximum number of iterations reached 0.04197835 -0.04085927> 
 > ## Predict new y
 > output <- predict(final_wf, new_data=test, type='prob') %>%
 +   bind_cols(., test) %>%
@@ -190,5 +190,5 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > stopCluster(cl)
 > 
 > proc.time()
-   user  system elapsed 
-314.491  22.465 271.437 
+    user   system  elapsed 
+ 439.571   25.017 1556.516 

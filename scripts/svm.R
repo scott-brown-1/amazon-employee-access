@@ -27,7 +27,7 @@ set.seed(42)
 
 ## parallel tune grid
 
-cl <- makePSOCKcluster(20)
+cl <- makePSOCKcluster(15)
 registerDoParallel(cl)
 
 ## Set up preprocessing
@@ -57,10 +57,10 @@ svm_wf <- workflow() %>%
 tuning_grid <- grid_regular(
   rbf_sigma(),
   cost(),
-  levels = 2)
+  levels = 5)
 
 ## Split data for CV
-folds <- vfold_cv(train, v = 2, repeats=1)
+folds <- vfold_cv(train, v = 5, repeats=1)
 
 ## Run the CV
 cv_results <- svm_wf %>%
