@@ -2,14 +2,13 @@
 ### Imports and setup ###
 #########################
 
-# NOTE: This script is optimized for running as a BATCH job
-
 library(tidyverse)
 library(tidymodels)
 library(doParallel)
 
 setwd('..')
 source('./scripts/amazon_analysis.R')
+PARALLEL <- F
 
 #########################
 ####### Load Data #######
@@ -26,10 +25,10 @@ test <- prep_df(vroom::vroom('./data/test.csv'))
 set.seed(42)
 
 ## parallel tune grid
-
-cl <- makePSOCKcluster(15)
-registerDoParallel(cl)
-
+if(PARALLEL){
+  cl <- makePSOCKcluster(15)
+  registerDoParallel(cl)
+}
 ## Set up preprocessing
 prepped_recipe <- setup_train_recipe(train)
 
@@ -73,7 +72,6 @@ final_wf <- knn_wf %>%
   finalize_workflow(best_params) %>%
   fit(data = train)
 
-## Fit or Tune Model HERE
 ## Predict new y
 output <- predict(final_wf, new_data=test, type='prob') %>%
   bind_cols(., test) %>%
@@ -82,4 +80,6 @@ output <- predict(final_wf, new_data=test, type='prob') %>%
 
 vroom::vroom_write(output,'./outputs/knn_predictions.csv',delim=',')
 
-stopCluster(cl)
+if(PARALLEL){
+  stopCluster(cl)
+}

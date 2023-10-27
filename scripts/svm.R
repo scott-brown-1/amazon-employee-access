@@ -10,6 +10,7 @@ library(doParallel)
 
 setwd('..')
 source('./scripts/amazon_analysis.R')
+PARALLEL <- F
 
 #########################
 ####### Load Data #######
@@ -26,13 +27,14 @@ test <- prep_df(vroom::vroom('./data/test.csv'))
 set.seed(42)
 
 ## parallel tune grid
-
-cl <- makePSOCKcluster(15)
-registerDoParallel(cl)
+if(PARALLEL){
+  cl <- makePSOCKcluster(15)
+  registerDoParallel(cl)
+}
 
 ## Set up preprocessing
-prepped_recipe <- setup_train_recipe(train, use_pca=T, pca_threshold=0.85)
-
+prepped_recipe <- setup_train_recipe(train)
+                                     
 ## Bake recipe
 bake(prepped_recipe, new_data=train)
 bake(prepped_recipe, new_data=test)
@@ -87,4 +89,6 @@ output <- predict(final_wf, new_data=test, type='prob') %>%
 
 vroom::vroom_write(output,'./outputs/svm_predictions.csv',delim=',')
 
-stopCluster(cl)
+if(PARALLEL){
+  stopCluster(cl)
+}

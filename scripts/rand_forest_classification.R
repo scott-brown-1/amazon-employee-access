@@ -10,6 +10,7 @@ library(doParallel)
 
 setwd('..')
 source('./scripts/amazon_analysis.R')
+PARALLEL <- F
 
 #########################
 ####### Load Data #######
@@ -27,12 +28,13 @@ set.seed(42)
 
 ## parallel tune grid
 
-#doParallel::registerDoParallel(10)
-cl <- makePSOCKcluster(15)
-registerDoParallel(cl)
+if(PARALLEL){
+  cl <- makePSOCKcluster(15)
+  registerDoParallel(cl)
+}
 
 ## Set up preprocessing
-prepped_recipe <- setup_train_recipe(train, use_pca=T, pca_threshold=0.85)
+prepped_recipe <- setup_train_recipe(train)
 
 ## Bake recipe
 bake(prepped_recipe, new_data=train)
@@ -80,16 +82,15 @@ final_wf <- rand_forest_wf %>%
   finalize_workflow(best_params) %>%
   fit(data = train)
 
-## Predict new rentals
-y_pred <- predict(final_wf, new_data=test, type='prob')
-
-# Create output df in Kaggle format
-output <- data.frame(
-  Id=test$id,
-  Action=y_pred$.pred_1
-)
+## Predict new y
+output <- predict(final_wf, new_data=test, type='prob') %>%
+  bind_cols(., test) %>%
+  rename(ACTION=.pred_1) %>%
+  select(id, ACTION)
 
 #LS: penalty, then mixture
 vroom::vroom_write(output,'./outputs/rf_batch_predictions.csv',delim=',')
 
-stopCluster(cl)
+if(PARALLEL){
+  stopCluster(cl)
+}
