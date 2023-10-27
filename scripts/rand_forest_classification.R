@@ -65,7 +65,7 @@ tuning_grid <- grid_regular(
   levels = 5)
 
 ## Split data for CV
-folds <- vfold_cv(train, v = 3, repeats=1)
+folds <- vfold_cv(train, v = 5, repeats=1)
 
 ## Run the CV
 cv_results <- rand_forest_wf %>%

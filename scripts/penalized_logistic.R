@@ -58,9 +58,9 @@ pen_logic_wf <- workflow(prepped_recipe) %>%
 ## Grid of values to tune over10
 tuning_grid <- grid_regular(penalty(),
                             mixture(),
-                            levels = 3)
+                            levels = 5)
 ## Split data for CV
-folds <- vfold_cv(train, v = 3, repeats=1)
+folds <- vfold_cv(train, v = 5, repeats=1)
 
 ## Run the CV
 cv_results <- pen_logic_wf %>%
