@@ -34,7 +34,7 @@ if(PARALLEL){
 }
 
 ## Set up preprocessing
-prepped_recipe <- setup_train_recipe(train)
+prepped_recipe <- setup_train_recipe(train ,pca_threshold = 0)
 
 ## Bake recipe
 bake(prepped_recipe, new_data=train)

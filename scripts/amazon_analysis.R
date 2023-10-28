@@ -33,6 +33,7 @@ setup_train_recipe <- function(df,other_threshold = 0.01,
   prelim_ft_eng <- recipe(ACTION~., data=df) %>%
     step_mutate_at(all_numeric_predictors(), fn = factor) %>%
     step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION)) %>%
+    step_rm(ROLE_TITLE) %>%
     step_normalize(all_numeric_predictors())
   
   ## Dimension reduce with principal component analysis if pca_threshold > 0
