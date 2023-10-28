@@ -2,8 +2,6 @@
 ### Imports and setup ###
 #########################
 
-# NOTE: This script is optimized for running as a BATCH job
-
 library(tidyverse)
 library(tidymodels)
 library(doParallel)

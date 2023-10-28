@@ -60,38 +60,33 @@ bart_workflow <-
   workflow(prepped_recipe) %>%
   add_model(bart_model)
 
-## Grid of values to tune over
-# tuning_grid <- grid_regular(
-#   trees(),
-#   prior_terminal_node_coef(),
-#   prior_terminal_node_expo(),
-#   levels = 1#7#0 #10^2 tuning possibilities
-# )
-# 
-# ## Split data for CV
-# folds <- vfold_cv(train, v = 2, repeats=1)
-# 
-# ## Run the CV
-# cv_results <- bart_workflow %>%
-#   tune_grid(resamples=folds,
-#             grid=tuning_grid,
-#             metrics=metric_set(roc_auc))
-# 
-# ## Find optimal tuning params
-# best_params <- cv_results %>%
-#   select_best("roc_auc")
-# 
-# ## Fit workflow
-# final_wf <- bart_workflow %>%
-#   finalize_workflow(best_params) %>%
-#   fit(data = train)
+# Grid of values to tune over
+tuning_grid <- grid_regular(
+  trees(),
+  prior_terminal_node_coef(),
+  prior_terminal_node_expo(),
+  levels = 1#7#0 #10^2 tuning possibilities
+)
+
+## Split data for CV
+folds <- vfold_cv(train, v = 2, repeats=1)
+
+## Run the CV
+cv_results <- bart_workflow %>%
+  tune_grid(resamples=folds,
+            grid=tuning_grid,
+            metrics=metric_set(roc_auc))
+
+## Find optimal tuning params
+best_params <- cv_results %>%
+  select_best("roc_auc")
 
 ## Fit workflow
 final_wf <- bart_workflow %>%
+  finalize_workflow(best_params) %>%
   fit(data = train)
 
 ## Predict new y
-
 output <- predict(final_wf, new_data=test, type='prob') %>%
   bind_cols(., test) %>%
   rename(ACTION=.pred_1) %>%
