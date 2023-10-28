@@ -49,7 +49,7 @@ Type 'q()' to quit R.
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Learn how to get started at https://www.tidymodels.org/start/
+• Use suppressPackageStartupMessages() to eliminate package startup messages
 > library(doParallel)
 Loading required package: foreach
 
@@ -64,7 +64,7 @@ Loading required package: parallel
 > 
 > setwd('..')
 > source('./scripts/amazon_analysis.R')
-> PARALLEL <- F
+> PARALLEL <- T
 > 
 > #########################
 > ####### Load Data #######
@@ -140,7 +140,8 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > #########################
 > 
 > ## Define model
-> svm_model <- svm_rbf(rbf_sigma=tune(), cost=tune()) %>% # Radial
+> svm_model <- svm_rbf(rbf_sigma=0.0131, cost=0.00316) %>%
++             #svm_rbf(rbf_sigma=tune(), cost=tune()) %>% # Radial
 +              #svm_poly(degree=tune(), cost=tune()) %>% # Polynomial
 +              #svm_linear(cost=tune()) %>% # Linear
 +   set_mode("classification") %>%
@@ -151,51 +152,47 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 +   add_recipe(prepped_recipe) %>%
 +   add_model(svm_model)
 > 
-> ## Grid of values to tune over
-> tuning_grid <- grid_regular(
-+   rbf_sigma(),
-+   cost(),
-+   levels = 5)
+> # ## Grid of values to tune over
+> # tuning_grid <- grid_regular(
+> #   rbf_sigma(),
+> #   cost(),
+> #   levels = 5)
+> # 
+> # ## Split data for CV
+> # folds <- vfold_cv(train, v = 5, repeats=1)
+> # 
+> # ## Run the CV
+> # cv_results <- svm_wf %>%
+> #   tune_grid(resamples=folds,
+> #             grid=tuning_grid,
+> #             metrics=metric_set(roc_auc))
+> # 
+> # ## Find optimal tuning params
+> # best_params <- cv_results %>%
+> #   select_best("roc_auc")
+> # 
+> # print(best_params)
+> # 
+> # ## Fit workflow
+> # final_wf <- svm_wf %>%
+> #   finalize_workflow(best_params) %>%
+> #   fit(data = train)
 > 
-> ## Split data for CV
-> folds <- vfold_cv(train, v = 5, repeats=1)
-> 
-> ## Run the CV
-> cv_results <- svm_wf %>%
-+   tune_grid(resamples=folds,
-+             grid=tuning_grid,
-+             metrics=metric_set(roc_auc))
-→ A | error:   $ operator is invalid for atomic vectors
-There were issues with some computations   A: x1
-→ B | warning: Model failed to converge with max|grad| = 0.32522 (tol = 0.002, component 1), Model is nearly unidentifiable: very large eigenvalue
-                - Rescale variables?
-There were issues with some computations   A: x1There were issues with some computations   A: x1   B: x1
-There were issues with some computations   A: x2   B: x1
-There were issues with some computations   A: x3   B: x1
-There were issues with some computations   A: x3   B: x1
-
-> 
-> ## Find optimal tuning params
-> best_params <- cv_results %>%
-+   select_best("roc_auc")
-> 
-> print(best_params)
-# A tibble: 1 × 3
-    cost rbf_sigma .config              
-   <dbl>     <dbl> <chr>                
-1 0.0131   0.00316 Preprocessor1_Model09
-> 
-> ## Fit workflow
 > final_wf <- svm_wf %>%
-+   finalize_workflow(best_params) %>%
 +   fit(data = train)
-line search fails -4.562715 -0.5141254 2.0478e-05 2.777451e-06 -3.54809e-08 -6.902138e-09 -7.457485e-13> 
+> 
 > ## Predict new y
 > output <- predict(final_wf, new_data=test, type='prob') %>%
 +   bind_cols(., test) %>%
 +   rename(ACTION=.pred_1) %>%
 +   select(id, ACTION)
-Error in prob.model(object)[[p]]$A : 
-  $ operator is invalid for atomic vectors
-Calls: %>% ... <Anonymous> -> <Anonymous> -> .local -> .SigmoidPredict
-Execution halted
+> 
+> vroom::vroom_write(output,'./outputs/svm_predictions.csv',delim=',')
+> 
+> if(PARALLEL){
++   stopCluster(cl)
++ }
+> 
+> proc.time()
+   user  system elapsed 
+711.287 274.942 340.273 
