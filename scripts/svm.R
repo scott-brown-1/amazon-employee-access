@@ -10,7 +10,7 @@ library(doParallel)
 
 setwd('..')
 source('./scripts/amazon_analysis.R')
-PARALLEL <- F
+PARALLEL <- T
 
 #########################
 ####### Load Data #######
@@ -44,7 +44,8 @@ bake(prepped_recipe, new_data=test)
 #########################
 
 ## Define model
-svm_model <- svm_rbf(rbf_sigma=tune(), cost=tune()) %>% # Radial
+svm_model <- svm_rbf(rbf_sigma=0.0131, cost=0.00316) %>%
+            #svm_rbf(rbf_sigma=tune(), cost=tune()) %>% # Radial
              #svm_poly(degree=tune(), cost=tune()) %>% # Polynomial
              #svm_linear(cost=tune()) %>% # Linear
   set_mode("classification") %>%
@@ -55,30 +56,33 @@ svm_wf <- workflow() %>%
   add_recipe(prepped_recipe) %>%
   add_model(svm_model)
 
-## Grid of values to tune over
-tuning_grid <- grid_regular(
-  rbf_sigma(),
-  cost(),
-  levels = 5)
+# ## Grid of values to tune over
+# tuning_grid <- grid_regular(
+#   rbf_sigma(),
+#   cost(),
+#   levels = 5)
+# 
+# ## Split data for CV
+# folds <- vfold_cv(train, v = 5, repeats=1)
+# 
+# ## Run the CV
+# cv_results <- svm_wf %>%
+#   tune_grid(resamples=folds,
+#             grid=tuning_grid,
+#             metrics=metric_set(roc_auc))
+# 
+# ## Find optimal tuning params
+# best_params <- cv_results %>%
+#   select_best("roc_auc")
+# 
+# print(best_params)
+# 
+# ## Fit workflow
+# final_wf <- svm_wf %>%
+#   finalize_workflow(best_params) %>%
+#   fit(data = train)
 
-## Split data for CV
-folds <- vfold_cv(train, v = 5, repeats=1)
-
-## Run the CV
-cv_results <- svm_wf %>%
-  tune_grid(resamples=folds,
-            grid=tuning_grid,
-            metrics=metric_set(roc_auc))
-
-## Find optimal tuning params
-best_params <- cv_results %>%
-  select_best("roc_auc")
-
-print(best_params)
-
-## Fit workflow
 final_wf <- svm_wf %>%
-  finalize_workflow(best_params) %>%
   fit(data = train)
 
 ## Predict new y
