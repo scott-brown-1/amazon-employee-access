@@ -11,7 +11,7 @@ library(doParallel)
 
 setwd('..')
 source('./scripts/amazon_analysis.R')
-PARALLEL <- F
+PARALLEL <- T
 
 #########################
 ####### Load Data #######
@@ -30,7 +30,7 @@ set.seed(42)
 ## parallel tune grid
 
 if(PARALLEL){
-  cl <- makePSOCKcluster(15)
+  cl <- makePSOCKcluster(10)
   registerDoParallel(cl)
 }
 
