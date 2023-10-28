@@ -49,15 +49,7 @@ Type 'q()' to quit R.
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Use suppressPackageStartupMessages() to eliminate package startup messages
-> library(discrim)
-
-Attaching package: ‘discrim’
-
-The following object is masked from ‘package:dials’:
-
-    smoothness
-
+• Learn how to get started at https://www.tidymodels.org/start/
 > library(doParallel)
 Loading required package: foreach
 
@@ -72,7 +64,7 @@ Loading required package: parallel
 > 
 > setwd('..')
 > source('./scripts/amazon_analysis.R')
-> PARALLEL <- F
+> PARALLEL <- T
 > 
 > #########################
 > ####### Load Data #######
@@ -97,7 +89,7 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 > 
 > #########################
-> ## Feature Engineering ## 
+> ## Feature Engineering ##
 > #########################
 > 
 > set.seed(42)
@@ -105,7 +97,7 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > ## parallel tune grid
 > 
 > if(PARALLEL){
-+   cl <- makePSOCKcluster(15)
++   cl <- makePSOCKcluster(10)
 +   registerDoParallel(cl)
 + }
 > 
@@ -145,58 +137,64 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 # ℹ 58,911 more rows
 > 
 > #########################
-> ## Fit Classifer Model ##
+> ## Fit Regression Model #
 > #########################
 > 
-> ## Define model
-> bayes_model <- naive_Bayes(
-+   Laplace=tune(),
-+   smoothness=tune()) %>%
-+ set_engine("naivebayes") %>%
-+ set_mode("classification")
+> # Define model
+> bart_model <- 
++   parsnip::bart(
++     trees = 250,
++     prior_terminal_node_coef = 0.75,#tune(), #0.75,
++     prior_terminal_node_expo = 1.75#tune()  #1.75,
++   ) %>% 
++   set_engine("dbarts") %>% 
++   set_mode("classification")
 > 
 > ## Define workflow
-> bayes_wf <- workflow() %>%
-+   add_recipe(prepped_recipe) %>%
-+   add_model(bayes_model)
+> # Transform response to get different cutoff
+> bart_workflow <-
++   workflow(prepped_recipe) %>%
++   add_model(bart_model)
 > 
 > ## Grid of values to tune over
-> tuning_grid <- grid_regular(
-+   Laplace(),
-+   smoothness(),
-+   levels = 5)
-> 
-> ## Split data for CV
-> folds <- vfold_cv(train, v = 5, repeats=1)
-> 
-> ## Run the CV
-> cv_results <- bayes_wf %>%
-+   tune_grid(resamples=folds,
-+             grid=tuning_grid,
-+             metrics=metric_set(roc_auc))
-→ A | warning: Model failed to converge with max|grad| = 0.32522 (tol = 0.002, component 1), Model is nearly unidentifiable: very large eigenvalue
-                - Rescale variables?
-There were issues with some computations   A: x1
-There were issues with some computations   A: x1
-
-> 
-> ## Find optimal tuning params
-> best_params <- cv_results %>%
-+   select_best("roc_auc")
+> # tuning_grid <- grid_regular(
+> #   trees(),
+> #   prior_terminal_node_coef(),
+> #   prior_terminal_node_expo(),
+> #   levels = 1#7#0 #10^2 tuning possibilities
+> # )
+> # 
+> # ## Split data for CV
+> # folds <- vfold_cv(train, v = 2, repeats=1)
+> # 
+> # ## Run the CV
+> # cv_results <- bart_workflow %>%
+> #   tune_grid(resamples=folds,
+> #             grid=tuning_grid,
+> #             metrics=metric_set(roc_auc))
+> # 
+> # ## Find optimal tuning params
+> # best_params <- cv_results %>%
+> #   select_best("roc_auc")
+> # 
+> # ## Fit workflow
+> # final_wf <- bart_workflow %>%
+> #   finalize_workflow(best_params) %>%
+> #   fit(data = train)
 > 
 > ## Fit workflow
-> final_wf <- bayes_wf %>%
-+   finalize_workflow(best_params) %>%
+> final_wf <- bart_workflow %>%
 +   fit(data = train)
 > 
 > ## Predict new y
+> 
 > output <- predict(final_wf, new_data=test, type='prob') %>%
 +   bind_cols(., test) %>%
 +   rename(ACTION=.pred_1) %>%
 +   select(id, ACTION)
 > 
 > #LS: penalty, then mixture
-> vroom::vroom_write(output,'./outputs/naive_bayes_predictions.csv',delim=',')
+> vroom::vroom_write(output,'./outputs/bart_predictions.csv',delim=',')
 > 
 > if(PARALLEL){
 +   stopCluster(cl)
@@ -204,4 +202,4 @@ There were issues with some computations   A: x1
 > 
 > proc.time()
    user  system elapsed 
-440.872   2.588 245.848 
+452.743   4.205 391.999 

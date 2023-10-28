@@ -49,7 +49,7 @@ Type 'q()' to quit R.
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Use suppressPackageStartupMessages() to eliminate package startup messages
+• Dig deeper into tidy modeling with R at https://www.tmwr.org
 > library(doParallel)
 Loading required package: foreach
 
@@ -64,6 +64,7 @@ Loading required package: parallel
 > 
 > setwd('..')
 > source('./scripts/amazon_analysis.R')
+> PARALLEL <- F
 > 
 > #########################
 > ####### Load Data #######
@@ -95,12 +96,13 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > 
 > ## parallel tune grid
 > 
-> #doParallel::registerDoParallel(10)
-> cl <- makePSOCKcluster(15)
-> registerDoParallel(cl)
+> if(PARALLEL){
++   cl <- makePSOCKcluster(15)
++   registerDoParallel(cl)
++ }
 > 
 > ## Set up preprocessing
-> prepped_recipe <- setup_train_recipe(train, use_pca=T, pca_threshold=0.85)
+> prepped_recipe <- setup_train_recipe(train)
 > 
 > ## Bake recipe
 > bake(prepped_recipe, new_data=train)
@@ -159,13 +161,96 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 +   levels = 5)
 > 
 > ## Split data for CV
-> folds <- vfold_cv(train, v = 3, repeats=1)
+> folds <- vfold_cv(train, v = 5, repeats=1)
 > 
 > ## Run the CV
 > cv_results <- rand_forest_wf %>%
 +   tune_grid(resamples=folds,
 +             grid=tuning_grid,
 +             metrics=metric_set(roc_auc))
+→ A | warning: 7 columns were requested but there were 5 predictors in the data. 5 will be used.
+There were issues with some computations   A: x1
+→ B | warning: 8 columns were requested but there were 5 predictors in the data. 5 will be used.
+There were issues with some computations   A: x1There were issues with some computations   A: x1   B: x1
+→ C | warning: 10 columns were requested but there were 5 predictors in the data. 5 will be used.
+There were issues with some computations   A: x1   B: x1There were issues with some computations   A: x1   B: x1   C: x1
+There were issues with some computations   A: x2   B: x1   C: x1
+There were issues with some computations   A: x2   B: x2   C: x1
+There were issues with some computations   A: x2   B: x2   C: x2
+There were issues with some computations   A: x3   B: x2   C: x2
+There were issues with some computations   A: x3   B: x3   C: x2
+There were issues with some computations   A: x3   B: x3   C: x3
+There were issues with some computations   A: x4   B: x3   C: x3
+There were issues with some computations   A: x4   B: x4   C: x3
+There were issues with some computations   A: x4   B: x4   C: x4
+There were issues with some computations   A: x5   B: x4   C: x4
+There were issues with some computations   A: x5   B: x5   C: x4
+There were issues with some computations   A: x5   B: x5   C: x5
+→ D | warning: Model failed to converge with max|grad| = 0.32522 (tol = 0.002, component 1), Model is nearly unidentifiable: very large eigenvalue
+                - Rescale variables?
+There were issues with some computations   A: x5   B: x5   C: x5There were issues with some computations   A: x5   B: x5   C: x5   D: x1
+There were issues with some computations   A: x6   B: x5   C: x5   D: x1
+There were issues with some computations   A: x6   B: x6   C: x5   D: x1
+There were issues with some computations   A: x6   B: x6   C: x6   D: x1
+There were issues with some computations   A: x7   B: x6   C: x6   D: x1
+There were issues with some computations   A: x7   B: x7   C: x6   D: x1
+There were issues with some computations   A: x7   B: x7   C: x7   D: x1
+There were issues with some computations   A: x8   B: x7   C: x7   D: x1
+There were issues with some computations   A: x8   B: x8   C: x7   D: x1
+There were issues with some computations   A: x8   B: x8   C: x8   D: x1
+There were issues with some computations   A: x9   B: x8   C: x8   D: x1
+There were issues with some computations   A: x9   B: x9   C: x8   D: x1
+There were issues with some computations   A: x9   B: x9   C: x9   D: x1
+There were issues with some computations   A: x10   B: x9   C: x9   D: x1
+There were issues with some computations   A: x10   B: x10   C: x9   D: x1
+There were issues with some computations   A: x10   B: x10   C: x10   D: x1
+There were issues with some computations   A: x11   B: x10   C: x10   D: x1
+There were issues with some computations   A: x11   B: x11   C: x10   D: x1
+There were issues with some computations   A: x11   B: x11   C: x11   D: x1
+There were issues with some computations   A: x12   B: x11   C: x11   D: x1
+There were issues with some computations   A: x12   B: x12   C: x11   D: x1
+There were issues with some computations   A: x12   B: x12   C: x12   D: x1
+There were issues with some computations   A: x13   B: x12   C: x12   D: x1
+There were issues with some computations   A: x13   B: x13   C: x12   D: x1
+There were issues with some computations   A: x13   B: x13   C: x13   D: x1
+There were issues with some computations   A: x14   B: x13   C: x13   D: x1
+There were issues with some computations   A: x14   B: x14   C: x13   D: x1
+There were issues with some computations   A: x14   B: x14   C: x14   D: x1
+There were issues with some computations   A: x15   B: x14   C: x14   D: x1
+There were issues with some computations   A: x15   B: x15   C: x14   D: x1
+There were issues with some computations   A: x15   B: x15   C: x15   D: x1
+There were issues with some computations   A: x16   B: x15   C: x15   D: x1
+There were issues with some computations   A: x16   B: x16   C: x15   D: x1
+There were issues with some computations   A: x16   B: x16   C: x16   D: x1
+There were issues with some computations   A: x17   B: x16   C: x16   D: x1
+There were issues with some computations   A: x17   B: x17   C: x16   D: x1
+There were issues with some computations   A: x17   B: x17   C: x17   D: x1
+There were issues with some computations   A: x18   B: x17   C: x17   D: x1
+There were issues with some computations   A: x18   B: x18   C: x17   D: x1
+There were issues with some computations   A: x18   B: x18   C: x18   D: x1
+There were issues with some computations   A: x19   B: x18   C: x18   D: x1
+There were issues with some computations   A: x19   B: x19   C: x18   D: x1
+There were issues with some computations   A: x19   B: x19   C: x19   D: x1
+There were issues with some computations   A: x20   B: x19   C: x19   D: x1
+There were issues with some computations   A: x20   B: x20   C: x19   D: x1
+There were issues with some computations   A: x20   B: x20   C: x20   D: x1
+There were issues with some computations   A: x21   B: x20   C: x20   D: x1
+There were issues with some computations   A: x21   B: x21   C: x20   D: x1
+There were issues with some computations   A: x21   B: x21   C: x21   D: x1
+There were issues with some computations   A: x22   B: x21   C: x21   D: x1
+There were issues with some computations   A: x22   B: x22   C: x21   D: x1
+There were issues with some computations   A: x22   B: x22   C: x22   D: x1
+There were issues with some computations   A: x23   B: x22   C: x22   D: x1
+There were issues with some computations   A: x23   B: x23   C: x22   D: x1
+There were issues with some computations   A: x23   B: x23   C: x23   D: x1
+There were issues with some computations   A: x24   B: x23   C: x23   D: x1
+There were issues with some computations   A: x24   B: x24   C: x23   D: x1
+There were issues with some computations   A: x24   B: x24   C: x24   D: x1
+There were issues with some computations   A: x25   B: x24   C: x24   D: x1
+There were issues with some computations   A: x25   B: x25   C: x24   D: x1
+There were issues with some computations   A: x25   B: x25   C: x25   D: x1
+There were issues with some computations   A: x25   B: x25   C: x25   D: x1
+
 > 
 > ## Find optimal tuning params
 > best_params <- cv_results %>%
@@ -176,20 +261,19 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 +   finalize_workflow(best_params) %>%
 +   fit(data = train)
 > 
-> ## Predict new rentals
-> y_pred <- predict(final_wf, new_data=test, type='prob')
-> 
-> # Create output df in Kaggle format
-> output <- data.frame(
-+   Id=test$id,
-+   Action=y_pred$.pred_1
-+ )
+> ## Predict new y
+> output <- predict(final_wf, new_data=test, type='prob') %>%
++   bind_cols(., test) %>%
++   rename(ACTION=.pred_1) %>%
++   select(id, ACTION)
 > 
 > #LS: penalty, then mixture
 > vroom::vroom_write(output,'./outputs/rf_batch_predictions.csv',delim=',')
 > 
-> stopCluster(cl)
+> if(PARALLEL){
++   stopCluster(cl)
++ }
 > 
 > proc.time()
-   user  system elapsed 
-190.343   1.932 848.050 
+     user    system   elapsed 
+15425.772    55.681 15013.797 

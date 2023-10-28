@@ -49,7 +49,7 @@ Type 'q()' to quit R.
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Search for functions across packages at https://www.tidymodels.org/find/
+• Use suppressPackageStartupMessages() to eliminate package startup messages
 > library(discrim)
 
 Attaching package: ‘discrim’
@@ -72,6 +72,7 @@ Loading required package: parallel
 > 
 > setwd('..')
 > source('./scripts/amazon_analysis.R')
+> PARALLEL <- F
 > 
 > #########################
 > ####### Load Data #######
@@ -103,11 +104,13 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > 
 > ## parallel tune grid
 > 
-> cl <- makePSOCKcluster(10)
-> registerDoParallel(cl)
+> if(PARALLEL){
++   cl <- makePSOCKcluster(15)
++   registerDoParallel(cl)
++ }
 > 
 > ## Set up preprocessing
-> prepped_recipe <- setup_train_recipe(train, use_pca=T, pca_threshold=0.85)
+> prepped_recipe <- setup_train_recipe(train)
 > 
 > ## Bake recipe
 > bake(prepped_recipe, new_data=train)
@@ -171,6 +174,11 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 +   tune_grid(resamples=folds,
 +             grid=tuning_grid,
 +             metrics=metric_set(roc_auc))
+→ A | warning: Model failed to converge with max|grad| = 0.32522 (tol = 0.002, component 1), Model is nearly unidentifiable: very large eigenvalue
+                - Rescale variables?
+There were issues with some computations   A: x1
+There were issues with some computations   A: x1
+
 > 
 > ## Find optimal tuning params
 > best_params <- cv_results %>%
@@ -187,25 +195,13 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 +   rename(ACTION=.pred_1) %>%
 +   select(id, ACTION)
 > 
-> print(sum(output$ACTION))
-[1] 56034.26
-> print(nrow(output))
-[1] 58921
-> 
-> ## Predict new y
-> # y_pred <- predict(final_wf, new_data=test, type='prob')
-> # 
-> # # Create output df in Kaggle format
-> # output <- data.frame(
-> #   Id=test$id,
-> #   Action=y_pred$.pred_1
-> # )
-> 
 > #LS: penalty, then mixture
 > vroom::vroom_write(output,'./outputs/naive_bayes_predictions.csv',delim=',')
 > 
-> stopCluster(cl)
+> if(PARALLEL){
++   stopCluster(cl)
++ }
 > 
 > proc.time()
    user  system elapsed 
-134.222   1.529 138.823 
+440.872   2.588 245.848 
