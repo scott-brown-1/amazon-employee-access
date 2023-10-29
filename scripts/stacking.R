@@ -5,6 +5,7 @@
 library(tidyverse)
 library(tidymodels)
 library(doParallel)
+library(discrim)
 library(stacks)
 
 setwd('..')
@@ -122,7 +123,7 @@ fitted_stack <- model_stack %>%
   blend_predictions() %>% # This is a Lasso (L1) penalized reg model
   fit_members()
 
-print(head(as_tibble(fitted_stack)))
+#print(head(as_tibble(fitted_stack)))
 
 ## Predict new y
 output <- predict(fitted_stack, new_data=test, type='prob') %>%
