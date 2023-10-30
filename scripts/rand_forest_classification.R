@@ -6,7 +6,7 @@ library(tidyverse)
 library(tidymodels)
 library(doParallel)
 
-setwd('..')
+#setwd('..')
 source('./scripts/amazon_analysis.R')
 PARALLEL <- F
 
@@ -22,17 +22,17 @@ test <- prep_df(vroom::vroom('./data/test.csv'))
 ## Feature Engineering ##
 #########################
 
-set.seed(42)
+set.seed(2003)
 
 ## parallel tune grid
 
 if(PARALLEL){
-  cl <- makePSOCKcluster(15)
+  cl <- makePSOCKcluster(10)
   registerDoParallel(cl)
 }
 
 ## Set up preprocessing
-prepped_recipe <- setup_train_recipe(train)
+prepped_recipe <- setup_train_recipe(train, smote_K = 5, pca_threshold = 0.8)
 
 ## Bake recipe
 bake(prepped_recipe, new_data=train)
@@ -45,7 +45,7 @@ bake(prepped_recipe, new_data=test)
 ## Define model
 rand_forest_model <- rand_forest(
   mtry = tune(),
-  min_n =tune(),
+  min_n = tune(),
   trees = 750
   ) %>%
   set_engine("ranger") %>%
@@ -58,7 +58,7 @@ rand_forest_wf <- workflow(prepped_recipe) %>%
 
 ## Grid of values to tune over
 tuning_grid <- grid_regular(
-  mtry(range=c(4,ncol(train))),
+  mtry(range=c(1,5)),#(range=c(4,ncol(train))),
   min_n(),
   levels = 5)
 
@@ -75,9 +75,21 @@ cv_results <- rand_forest_wf %>%
 best_params <- cv_results %>%
   select_best("roc_auc")
 
+tryCatch(
+  expr = {
+    print(best_params)
+  },
+  error = function(e){ 
+    print('Error caught')
+    print(e)
+  })
+
 ## Fit workflow
 final_wf <- rand_forest_wf %>%
   finalize_workflow(best_params) %>%
+  fit(data = train)
+
+final_wf <- rand_forest_wf %>%
   fit(data = train)
 
 ## Predict new y
@@ -87,7 +99,7 @@ output <- predict(final_wf, new_data=test, type='prob') %>%
   select(id, ACTION)
 
 #LS: penalty, then mixture
-vroom::vroom_write(output,'./outputs/rf_batch_predictions.csv',delim=',')
+vroom::vroom_write(output,'./outputs/rand_forest_predictions.csv',delim=',')
 
 if(PARALLEL){
   stopCluster(cl)
