@@ -15,7 +15,7 @@ prep_df <- function(df) {
 }
 
 ## TODO: tune recipes!
-setup_train_recipe <- function(df,other_threshold = 0.01, 
+setup_train_recipe <- function(df,encode=T,other_threshold = 0.01, 
                                smote_K = 5, pca_threshold = 0.85){
   
   ############
@@ -31,21 +31,40 @@ setup_train_recipe <- function(df,other_threshold = 0.01,
   ############
   
   prelim_ft_eng <- recipe(ACTION~., data=df) %>%
-    step_mutate_at(all_numeric_predictors(), fn = factor) %>%
-    step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION)) %>%
-    #step_rm(ROLE_TITLE) %>%
-    step_normalize(all_numeric_predictors())
-  
-  ## Dimension reduce with principal component analysis if pca_threshold > 0
-  if(pca_threshold > 0){
+    step_mutate_at(all_numeric_predictors(), fn = factor)
+    
+  if(encode){
     prelim_ft_eng <- prelim_ft_eng %>%
-      step_pca(all_predictors(), threshold=pca_threshold)
+      step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION)) %>%
+      step_normalize(all_numeric_predictors())
+      
+      ## Dimension reduce with principal component analysis if pca_threshold > 0
+      if(pca_threshold > 0){
+        prelim_ft_eng <- prelim_ft_eng %>%
+          step_pca(all_predictors(), threshold=pca_threshold)
+      }
+    
+      ## SMOTE upsample if K nearest neighbors > 0
+      if(smote_K > 0){
+        prelim_ft_eng <- prelim_ft_eng %>% 
+          step_smote(all_outcomes(), neighbors = smote_K)
+      }
   }
+
+  # prelim_ft_eng <- prelim_ft_eng %>%
+  #   step_normalize(all_numeric_predictors())
+  # 
+  # ## Dimension reduce with principal component analysis if pca_threshold > 0
+  # if(pca_threshold > 0){
+  #   prelim_ft_eng <- prelim_ft_eng %>%
+  #     step_pca(all_predictors(), threshold=pca_threshold)
+  # }
   
   ## SMOTE upsample if K nearest neighbors > 0
-  if(smote_K > 0){
-    prelim_ft_eng <- prelim_ft_eng %>% step_smote(all_outcomes(), neighbors = smote_K)
-  }
+  # if(smote_K > 0){
+  #   prelim_ft_eng <- prelim_ft_eng %>% 
+  #     step_smote(all_outcomes(), neighbors = smote_K)
+  # }
   
   # Set up preprocessing
   prepped_recipe <- prep(prelim_ft_eng, new_data=df)
