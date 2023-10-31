@@ -6,7 +6,7 @@ library(tidyverse)
 library(tidymodels)
 library(doParallel)
 
-#setwd('..')
+setwd('..')
 source('./scripts/amazon_analysis.R')
 PARALLEL <- F
 
