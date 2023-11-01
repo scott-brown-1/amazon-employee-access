@@ -47,7 +47,7 @@ Type 'q()' to quit R.
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Search for functions across packages at https://www.tidymodels.org/find/
+• Use tidymodels_prefer() to resolve common conflicts.
 > library(doParallel)
 Loading required package: foreach
 
@@ -145,7 +145,7 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > #########################
 > 
 > boost_model <- boost_tree(
-+   trees = 250, #tune(), #100
++   trees = 150, #tune(), #100
 +   tree_depth = 4, #tune(), #1,
 +   learn_rate = 0.075,#tune(), #0.1,
 +   mtry = 4,#tune(), #3,
@@ -188,14 +188,14 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > # Fit workflow
 > final_wf <- boost_wf %>%
 +   #finalize_workflow(best_params) %>%
-+   fit> 
-> ## Predict> 
++   fit(data = train)
+> 
 > ## Predict new y
 > output <- predict(final_wf, new_data=test, type='prob') %>%
 +   bind_cols(., test) %>%
 +   rename(ACTION=.pred_1) %>%
-+   sele> 
-> #LS: penal> 
++   select(id, ACTION)
+> 
 > #LS: penalty, then mixture
 > vroom::vroom_write(output,'./outputs/light_gbm_preds.csv',delim=',')
 > 
@@ -204,5 +204,5 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 + }
 > 
 > proc.time()
-    user   system  elapsed 
-1251.780    3.478   56.445 
+   user  system elapsed 
+827.175   1.658  23.049 
