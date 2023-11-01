@@ -47,7 +47,7 @@ Type 'q()' to quit R.
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Dig deeper into tidy modeling with R at https://www.tmwr.org
+• Use tidymodels_prefer() to resolve common conflicts.
 > library(doParallel)
 Loading required package: foreach
 
@@ -145,12 +145,12 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > #########################
 > 
 > boost_model <- boost_tree(
-+   trees = 200, #tune(), #100
++   trees = 225, #tune(), #100
 +   tree_depth = 6, #tune(), #1,
 +   learn_rate = 0.1,#tune(), #0.1,
 +   mtry = 2,#tune(), #3,
 +   min_n = 20, #tune(), #20,
-+   loss_reduction = 0#tune(), #0
++   loss_reduction = 0.1#tune(), #0
 +   ) %>% 
 +   set_engine("lightgbm") %>% 
 +   set_mode("classification")
@@ -205,4 +205,4 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > 
 > proc.time()
     user   system  elapsed 
-2213.159    3.845   51.351 
+2076.773    3.638   56.822 

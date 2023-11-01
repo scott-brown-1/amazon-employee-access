@@ -45,12 +45,12 @@ bake(prepped_recipe, new_data=test)
 #########################
 
 boost_model <- boost_tree(
-  trees = 200, #tune(), #100
+  trees = 225, #tune(), #100
   tree_depth = 6, #tune(), #1,
   learn_rate = 0.1,#tune(), #0.1,
   mtry = 2,#tune(), #3,
   min_n = 20, #tune(), #20,
-  loss_reduction = 0#tune(), #0
+  loss_reduction = 0.1#tune(), #0
   ) %>% 
   set_engine("lightgbm") %>% 
   set_mode("classification")
