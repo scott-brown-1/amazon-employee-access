@@ -34,7 +34,7 @@ if(PARALLEL){
 }
 
 ## Set up preprocessing
-prepped_recipe <- setup_train_recipe(train, encode=T, smote_K = 0.85, pca_threshold = 0)
+prepped_recipe <- setup_train_recipe(train, encode=T, smote_K = 5, pca_threshold = 0)
 
 ## Bake recipe
 bake(prepped_recipe, new_data=train)
