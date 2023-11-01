@@ -47,7 +47,7 @@ Type 'q()' to quit R.
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Use tidymodels_prefer() to resolve common conflicts.
+• Search for functions across packages at https://www.tidymodels.org/find/
 > library(doParallel)
 Loading required package: foreach
 
@@ -145,10 +145,10 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > #########################
 > 
 > boost_model <- boost_tree(
-+   trees = 150, #tune(), #100
-+   tree_depth = 4, #tune(), #1,
-+   learn_rate = 0.075,#tune(), #0.1,
-+   mtry = 4,#tune(), #3,
++   trees = 200, #tune(), #100
++   tree_depth = 5, #tune(), #1,
++   learn_rate = 0.1,#tune(), #0.1,
++   mtry = 3,#tune(), #3,
 +   min_n = 20, #tune(), #20,
 +   loss_reduction = 0#tune(), #0
 +   ) %>% 
@@ -204,5 +204,5 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 + }
 > 
 > proc.time()
-   user  system elapsed 
-827.175   1.658  23.049 
+    user   system  elapsed 
+1574.371    2.836   37.144 
