@@ -47,7 +47,7 @@ Type 'q()' to quit R.
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Learn how to get started at https://www.tidymodels.org/start/
+• Search for functions across packages at https://www.tidymodels.org/find/
 > library(doParallel)
 Loading required package: foreach
 
@@ -102,4 +102,107 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 + }
 > 
 > ## Set up preprocessing
-> prepped_recipe <- setup_train_recipe(train, encode=T, smote_K = 5, pca_threshold = 0)
+> prepped_recipe <- setup_train_recipe(train, encode = F, smote_K = 0, pca_threshold = 0)
+> 
+> ## Bake recipe
+> bake(prepped_recipe, new_data=train)
+# A tibble: 32,769 × 10
+   RESOURCE MGR_ID ROLE_ROLLUP_1 ROLE_ROLLUP_2 ROLE_DEPTNAME ROLE_TITLE
+   <fct>    <fct>  <fct>         <fct>         <fct>         <fct>     
+ 1 39353    85475  117961        118300        123472        117905    
+ 2 17183    1540   117961        118343        123125        118536    
+ 3 36724    14457  118219        118220        117884        117879    
+ 4 36135    5396   117961        118343        119993        118321    
+ 5 42680    5905   117929        117930        119569        119323    
+ 6 45333    14561  117951        117952        118008        118568    
+ 7 25993    17227  117961        118343        123476        118980    
+ 8 19666    4209   117961        117969        118910        126820    
+ 9 31246    783    117961        118413        120584        128230    
+10 78766    56683  118079        118080        117878        117879    
+# ℹ 32,759 more rows
+# ℹ 4 more variables: ROLE_FAMILY_DESC <fct>, ROLE_FAMILY <fct>,
+#   ROLE_CODE <fct>, ACTION <fct>
+> bake(prepped_recipe, new_data=test)
+# A tibble: 58,921 × 9
+   RESOURCE MGR_ID ROLE_ROLLUP_1 ROLE_ROLLUP_2 ROLE_DEPTNAME ROLE_TITLE
+   <fct>    <fct>  <fct>         <fct>         <fct>         <fct>     
+ 1 78766    72734  118079        118080        117878        117879    
+ 2 40644    4378   117961        118327        118507        118863    
+ 3 75443    2395   117961        118300        119488        118172    
+ 4 43219    19986  117961        118225        118403        120773    
+ 5 42093    50015  117961        118343        119598        118422    
+ 6 44722    1755   117961        117962        119223        125793    
+ 7 75834    21135  117961        118343        123494        118054    
+ 8 4675     3077   117961        118300        120312        124194    
+ 9 18072    15575  117902        118041        118623        280788    
+10 22680    4474   117961        118446        119064        118321    
+# ℹ 58,911 more rows
+# ℹ 3 more variables: ROLE_FAMILY_DESC <fct>, ROLE_FAMILY <fct>,
+#   ROLE_CODE <fct>
+> 
+> #########################
+> ## Fit Regression Model #
+> #########################
+> 
+> boost_model <- boost_tree(
++   trees = 250, #tune(), #100
++   tree_depth = 4, #tune(), #1,
++   learn_rate = 0.075,#tune(), #0.1,
++   mtry = 4,#tune(), #3,
++   min_n = 20, #tune(), #20,
++   loss_reduction = 0#tune(), #0
++   ) %>% 
++   set_engine("lightgbm") %>% 
++   set_mode("classification")
+> 
+> ## Define workflow
+> # Transform response to get different cutoff
+> boost_wf <- workflow(prepped_recipe) %>%
++   add_model(boost_model)
+> 
+> ## Grid of values to tune over
+> tuning_grid <- grid_regular(
++   trees(),
++   tree_depth(),
++   learn_rate(),
++   mtry(range=c(3,ncol(train))),
++   min_n(),
++   loss_reduction(),
++   levels = 5)
+> 
+> ## Split data for CV
+> folds <- vfold_cv(train, v = 5, repeats=1)
+> 
+> # Run the CV
+> # cv_results <- boost_wf %>%
+> #   tune_grid(resamples=folds,
+> #             grid=tuning_grid,
+> #             metrics=metric_set(roc_auc))
+> 
+> # Find optimal tuning params
+> # best_params <- cv_results %>%
+> #   select_best("roc_auc")
+> 
+> # print(best_params)
+> 
+> # Fit workflow
+> final_wf <- boost_wf %>%
++   #finalize_workflow(best_params) %>%
++   fit> 
+> ## Predict> 
+> ## Predict new y
+> output <- predict(final_wf, new_data=test, type='prob') %>%
++   bind_cols(., test) %>%
++   rename(ACTION=.pred_1) %>%
++   sele> 
+> #LS: penal> 
+> #LS: penalty, then mixture
+> vroom::vroom_write(output,'./outputs/light_gbm_preds.csv',delim=',')
+> 
+> if(PARALLEL){
++   stopCluster(cl)
++ }
+> 
+> proc.time()
+    user   system  elapsed 
+1251.780    3.478   56.445 
