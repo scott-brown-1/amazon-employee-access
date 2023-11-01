@@ -48,7 +48,7 @@ boost_model <- boost_tree(
   trees = 200, #tune(), #100
   tree_depth = 5, #tune(), #1,
   learn_rate = 0.1,#tune(), #0.1,
-  mtry = 3,#tune(), #3,
+  mtry = 2,#tune(), #3,
   min_n = 20, #tune(), #20,
   loss_reduction = 0#tune(), #0
   ) %>% 
