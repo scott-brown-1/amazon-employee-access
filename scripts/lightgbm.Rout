@@ -145,9 +145,9 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > #########################
 > 
 > boost_model <- boost_tree(
-+   trees = 200, #tune(), #100
++   trees = 300, #tune(), #100
 +   tree_depth = 5, #tune(), #1,
-+   learn_rate = 0.1,#tune(), #0.1,
++   learn_rate = 0.05,#tune(), #0.1,
 +   mtry = 5,#tune(), #3,
 +   min_n = 20, #tune(), #20,
 +   loss_reduction = 0#tune(), #0
@@ -205,4 +205,4 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > 
 > proc.time()
     user   system  elapsed 
-1306.303    3.054   36.323 
+2115.487    3.755   47.660 
