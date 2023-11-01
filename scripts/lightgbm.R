@@ -34,7 +34,7 @@ if(PARALLEL){
 }
 
 ## Set up preprocessing
-prepped_recipe <- setup_train_recipe(train, encode=F, smote_K = 0, pca_threshold = 0)
+prepped_recipe <- setup_train_recipe(train, encode=T, smote_K = 0.85, pca_threshold = 0)
 
 ## Bake recipe
 bake(prepped_recipe, new_data=train)
@@ -45,9 +45,9 @@ bake(prepped_recipe, new_data=test)
 #########################
 
 boost_model <- boost_tree(
-  trees = 300, #tune(), #100
+  trees = 200, #tune(), #100
   tree_depth = 5, #tune(), #1,
-  learn_rate = 0.05,#tune(), #0.1,
+  learn_rate = 0.1,#tune(), #0.1,
   mtry = 5,#tune(), #3,
   min_n = 20, #tune(), #20,
   loss_reduction = 0#tune(), #0

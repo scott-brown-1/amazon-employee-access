@@ -47,7 +47,7 @@ Type 'q()' to quit R.
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Use tidymodels_prefer() to resolve common conflicts.
+• Learn how to get started at https://www.tidymodels.org/start/
 > library(doParallel)
 Loading required package: foreach
 
@@ -102,52 +102,52 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 + }
 > 
 > ## Set up preprocessing
-> prepped_recipe <- setup_train_recipe(train, encode=F, smote_K = 0, pca_threshold = 0)
+> prepped_recipe <- setup_train_recipe(train, encode=T, smote_K = 0.85, pca_threshold = 0)
 > 
 > ## Bake recipe
 > bake(prepped_recipe, new_data=train)
 # A tibble: 32,769 × 10
    RESOURCE MGR_ID ROLE_ROLLUP_1 ROLE_ROLLUP_2 ROLE_DEPTNAME ROLE_TITLE
-   <fct>    <fct>  <fct>         <fct>         <fct>         <fct>     
- 1 39353    85475  117961        118300        123472        117905    
- 2 17183    1540   117961        118343        123125        118536    
- 3 36724    14457  118219        118220        117884        117879    
- 4 36135    5396   117961        118343        119993        118321    
- 5 42680    5905   117929        117930        119569        119323    
- 6 45333    14561  117951        117952        118008        118568    
- 7 25993    17227  117961        118343        123476        118980    
- 8 19666    4209   117961        117969        118910        126820    
- 9 31246    783    117961        118413        120584        128230    
-10 78766    56683  118079        118080        117878        117879    
+      <dbl>  <dbl>         <dbl>         <dbl>         <dbl>      <dbl>
+ 1  -0.351  -0.954        -0.141        -0.278      -0.00436     -0.469
+ 2  -0.0555 -0.588        -0.141        -0.955       1.12        -0.334
+ 3  -0.290  -0.465         1.02          0.879       0.746        1.24 
+ 4  -0.223  -0.988        -0.141        -0.955      -1.25         0.773
+ 5  -0.594  -0.573         0.614         1.67        2.11         1.36 
+ 6   1.29    2.02          0.419         0.474       1.18         0.675
+ 7   0.389  -0.709        -0.141        -0.955      -0.923        0.605
+ 8  -0.891  -0.524        -0.141         0.707      -0.118        0.456
+ 9  -0.407  -0.797        -0.141        -0.673       0.101        0.881
+10  -0.773  -0.418         3.47          2.69        0.503        1.24 
 # ℹ 32,759 more rows
-# ℹ 4 more variables: ROLE_FAMILY_DESC <fct>, ROLE_FAMILY <fct>,
-#   ROLE_CODE <fct>, ACTION <fct>
+# ℹ 4 more variables: ROLE_FAMILY_DESC <dbl>, ROLE_FAMILY <dbl>,
+#   ROLE_CODE <dbl>, ACTION <fct>
 > bake(prepped_recipe, new_data=test)
 # A tibble: 58,921 × 9
    RESOURCE MGR_ID ROLE_ROLLUP_1 ROLE_ROLLUP_2 ROLE_DEPTNAME ROLE_TITLE
-   <fct>    <fct>  <fct>         <fct>         <fct>         <fct>     
- 1 78766    72734  118079        118080        117878        117879    
- 2 40644    4378   117961        118327        118507        118863    
- 3 75443    2395   117961        118300        119488        118172    
- 4 43219    19986  117961        118225        118403        120773    
- 5 42093    50015  117961        118343        119598        118422    
- 6 44722    1755   117961        117962        119223        125793    
- 7 75834    21135  117961        118343        123494        118054    
- 8 4675     3077   117961        118300        120312        124194    
- 9 18072    15575  117902        118041        118623        280788    
-10 22680    4474   117961        118446        119064        118321    
+      <dbl>  <dbl>         <dbl>         <dbl>         <dbl>      <dbl>
+ 1   -0.773  1.49          3.47         2.69          0.503       1.24 
+ 2    1.81  -0.677        -0.141       -0.207         0.358      -1.65 
+ 3   -0.671 -0.938        -0.141       -0.278        -1.10        0.273
+ 4   -0.290  1.46         -0.141       -0.324        -0.754       0.850
+ 5    0.668 -0.698        -0.141       -0.955        -0.684      -2.01 
+ 6    1.27  -0.944        -0.141       -0.0278       -1.04       -1.81 
+ 7   -0.801  1.85         -0.141       -0.955         2.17       -0.582
+ 8   -2.42  -0.765        -0.141       -0.278        -0.0823     -1.76 
+ 9    2.41  -0.486        -0.897        0.295         1.71        0.858
+10    1.41  -0.747        -0.141       -0.862        -1.32        0.773
 # ℹ 58,911 more rows
-# ℹ 3 more variables: ROLE_FAMILY_DESC <fct>, ROLE_FAMILY <fct>,
-#   ROLE_CODE <fct>
+# ℹ 3 more variables: ROLE_FAMILY_DESC <dbl>, ROLE_FAMILY <dbl>,
+#   ROLE_CODE <dbl>
 > 
 > #########################
 > ## Fit Regression Model #
 > #########################
 > 
 > boost_model <- boost_tree(
-+   trees = 300, #tune(), #100
++   trees = 200, #tune(), #100
 +   tree_depth = 5, #tune(), #1,
-+   learn_rate = 0.05,#tune(), #0.1,
++   learn_rate = 0.1,#tune(), #0.1,
 +   mtry = 5,#tune(), #3,
 +   min_n = 20, #tune(), #20,
 +   loss_reduction = 0#tune(), #0
@@ -205,4 +205,4 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > 
 > proc.time()
     user   system  elapsed 
-2115.487    3.755   47.660 
+3424.368    5.634  133.457 
