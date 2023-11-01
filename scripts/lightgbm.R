@@ -10,7 +10,7 @@ library(bonsai)
 #setwd('./amazon-employee-access')
 setwd('..')
 source('./scripts/amazon_analysis.R')
-PARALLEL <- T
+PARALLEL <- F
 
 #########################
 ####### Load Data #######
@@ -29,7 +29,7 @@ set.seed(843)
 ## parallel tune grid
 
 if(PARALLEL){
-  cl <- makePSOCKcluster(10)
+  cl <- makePSOCKcluster(5)
   registerDoParallel(cl)
 }
 
@@ -45,12 +45,12 @@ bake(prepped_recipe, new_data=test)
 #########################
 
 boost_model <- boost_tree(
-  trees = tune(), #100
-  tree_depth = tune(), #1,
-  learn_rate = tune(), #0.1,
-  mtry = tune(), #3,
-  min_n = tune(), #20,
-  loss_reduction = tune(), #0
+  trees = 200, #tune(), #100
+  tree_depth = 5, #tune(), #1,
+  learn_rate = 0.1,#tune(), #0.1,
+  mtry = 5,#tune(), #3,
+  min_n = 20, #tune(), #20,
+  loss_reduction = 0#tune(), #0
   ) %>% 
   set_engine("lightgbm") %>% 
   set_mode("classification")
@@ -74,20 +74,20 @@ tuning_grid <- grid_regular(
 folds <- vfold_cv(train, v = 5, repeats=1)
 
 # Run the CV
-cv_results <- boost_wf %>%
-  tune_grid(resamples=folds,
-            grid=tuning_grid,
-            metrics=metric_set(roc_auc))
+# cv_results <- boost_wf %>%
+#   tune_grid(resamples=folds,
+#             grid=tuning_grid,
+#             metrics=metric_set(roc_auc))
 
 # Find optimal tuning params
-best_params <- cv_results %>%
-  select_best("roc_auc")
+# best_params <- cv_results %>%
+#   select_best("roc_auc")
 
-print(best_params)
+# print(best_params)
 
 # Fit workflow
 final_wf <- boost_wf %>%
-  finalize_workflow(best_params) %>%
+  #finalize_workflow(best_params) %>%
   fit(data = train)
 
 ## Predict new y
