@@ -45,7 +45,7 @@ bake(prepped_recipe, new_data=test)
 #########################
 
 boost_model <- boost_tree(
-  trees = 225, #tune(), #100
+  trees = 175, #tune(), #100
   tree_depth = 6, #tune(), #1,
   learn_rate = 0.1,#tune(), #0.1,
   mtry = 2,#tune(), #3,
